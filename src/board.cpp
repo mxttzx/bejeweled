@@ -1,48 +1,50 @@
 #include "../include/board.h"
 
 #include <EEPROM.h>
-
-#include "cursor.h"
 #include "M5Unified.h"
 
 uint32_t get_cell_color() {
     const uint32_t colors[] = {
-        0x0000FF,
         0xFF0000,
+        0x0000FF,
         0x00FF00,
-        0xFFFF00,
         0xFF00FF,
-        0x00FFFF,
-        0xFFFFFF
+        0xFFFF00
     };
-    return colors[rand() % sizeof(colors)];
+    return colors[rand() % 5];
 }
 
-Cursor* init_cursor() {
-    Cursor *cursor = (Cursor *)calloc(1, sizeof(Cursor));
-    cursor->dy = cursor->y + 1; // Start at position (0, 0) and (0, 1)
-    cursor->color = 0xFFFFFF;
-    return cursor;
+uint8_t g_idx(Board *board, uint8_t x, uint8_t y) {
+    return y * board->cols + x;
 }
 
 Board* init_board() {
-    Board *board = (Board *)malloc(sizeof(Board));
+    Board *board = (Board*)malloc(sizeof(Board));
+    if (!board) {
+        fprintf(stderr, "Failed to allocate memory for board\n");
+        exit(EXIT_FAILURE);
+    }
 
     board->rows = BOARD_ROWS;
     board->cols = BOARD_COLS;
 
     board->grid = (Cell *)calloc(board->rows * board->cols, sizeof(Cell));
+    if (!board->grid) {
+        fprintf(stderr, "Failed to allocate memory for board\n");
+        exit(EXIT_FAILURE);
+    }
 
-    for (int i = 0; i < board->rows * board->cols; i++) {
-        const uint8_t row = i / board->cols;
-        const uint8_t col = i % board->cols;
+    for (int i = 0; i < board->rows; i++) {
+        for (int j = 0; j < board->cols; j++) {
+            Cell *cell = &board->grid[i * board->cols + j];
 
-        Cell *cell = &board->grid[i];
-        cell->color = get_cell_color();
-        cell->x = col * CELL_WIDTH;
-        cell->y = row * CELL_WIDTH;
-        cell->w = CELL_WIDTH;
-        cell->h = CELL_HEIGHT;
+            cell->init = true;
+            cell->color = get_cell_color();
+            cell->x = j;
+            cell->y = i;
+            cell->w = CELL_WIDTH;
+            cell->h = CELL_HEIGHT;
+        }
     }
 
     return board;

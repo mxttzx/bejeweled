@@ -3,16 +3,17 @@
 #define M5_PROJECT_GAME_H
 
 #include "board.h"
-#include "cursor.h"
 
 void read_input();
 void update_game();
 
 Board *new_game();
 
-void render_cell(Cell *cell);
-void render_cursor(Cursor *cursor);
-void render_game(Board *board, Cursor *cursor);
-typedef struct {} GameState;
+typedef void (*Draw)(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t);
 
-#endif //M5_PROJECT_GAME_H
+void render_cell(Cell *cell, Draw *func);
+void render_game(Board *board, Cell *cursor);
+
+void rotate_cursor(Cell *cursor, float direction);
+
+#endif

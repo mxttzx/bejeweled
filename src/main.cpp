@@ -1,13 +1,14 @@
 #include <M5Unified.h>
-#include "EEPROM.h"
-#include <cstdlib>
+#include <EEPROM.h>
+#include "game.h"
+#include "state.h"
+
 #define SCREEN_WIDTH 135
 #define SCREEN_HEIGHT 240
 
-#include "game.h"
 
 Board* board;
-Cursor* cursor;
+InputState* input;
 
 // The setup routine runs once when M5StickC starts up
 void setup() {
@@ -22,12 +23,16 @@ void setup() {
     srand((unsigned) time(NULL));
 
     board = init_board();
-    cursor = init_cursor();
+    input = init_input();
 }
-
 
 // The loop routine keeps looping as long as the controller is on
 void loop() {
-    update_game();
-    render_game(board, cursor);
+    M5.update();
+
+    read_input(input);
+    render_game(board, input->cursor);
+    update_game(board, input);
+
+    delay(200); // Give player enough time to react to movement
 }

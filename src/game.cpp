@@ -1,34 +1,25 @@
-#include "game.h"
+#include "../include/game.h"
 
-#include "M5Unified.h"
+#include <M5Unified.h>
 
-Board *new_game() {
-    Cursor *cursor = init_cursor();
-    Board *board = init_board();
-
-    return board;
+void outline(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t color) {
+    M5.Lcd.drawRect(x * CELL_WIDTH, y * CELL_HEIGHT, w, h, color);
 }
 
-void update_game() {
-
+void fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t color) {
+    M5.Lcd.fillRect(x * CELL_WIDTH, y * CELL_HEIGHT, w, h, color);
 }
 
-void render_cell(Cell *cell) {
-    M5.Lcd.fillRect(cell->x, cell->y, cell->w, cell->h, cell->color);
+void render_cell(Cell *cell, Draw draw) {
+    draw(cell->x, cell->y, cell->w, cell->h, cell->color);
 }
 
-void render_cursor(Cursor *cursor) {
-    M5.Lcd.drawRect(cursor->dx, cursor->dy, cursor->w, cursor->h, cursor->color);
-}
-
-void render_game(Board *board, Cursor *cursor) {
+void render_game(Board *board, Cell *cursor) {
     for (int i = 0; i < board->cols * board->rows; i++) {
         Cell *cell = &board->grid[i];
-        render_cell(cell);
-
-        if (cursor->x == cell->x &&
-            cursor->y == cell->y) {
-            render_cursor(cursor);
-        }
+        render_cell(cell, fill);
     }
+
+    render_cell(&cursor[0], outline);
+    render_cell(&cursor[1], outline);
 }
