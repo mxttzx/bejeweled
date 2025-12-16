@@ -2,6 +2,8 @@
 
 #include <EEPROM.h>
 #include "M5Unified.h"
+#include "util.h"
+
 
 uint32_t get_cell_color() {
     const uint32_t colors[] = {
@@ -14,8 +16,16 @@ uint32_t get_cell_color() {
     return colors[rand() % 5];
 }
 
-uint8_t g_idx(Board *board, uint8_t x, uint8_t y) {
-    return y * board->cols + x;
+void resupply(Board *board) {
+    for (uint8_t y = 0; y < BOARD_ROWS; y++) {
+        for (uint8_t x = 0; x < BOARD_COLS; x++) {
+            Cell *c = &board->grid[get_idx(board, x, y)];
+            if (!c->init) {
+                c->init = true;
+                c->color = get_cell_color();
+            }
+        }
+    }
 }
 
 Board* init_board() {
@@ -34,10 +44,9 @@ Board* init_board() {
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < board->rows; i++) {
-        for (int j = 0; j < board->cols; j++) {
-            Cell *cell = &board->grid[i * board->cols + j];
-
+    for (uint8_t i = 0; i < BOARD_ROWS; i++) {
+        for (uint8_t j = 0; j < BOARD_COLS; j++) {
+            Cell *cell = &board->grid[get_idx(board, i, j)];
             cell->init = true;
             cell->color = get_cell_color();
             cell->x = j;

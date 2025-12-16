@@ -1,11 +1,7 @@
-#ifndef BEJEWELED_STATE_H_
-#define BEJEWELED_STATE_H_
+#ifndef STATE_H_
+#define STATE_H_
 
 #include "board.h"
-
-#define MIN_TILT 0.25
-
-#define ROTATE (M_PI / 2)
 
 
 typedef struct {
@@ -23,7 +19,12 @@ typedef struct {
 } InputState;
 
 InputState* init_input();
+
 void read_input(InputState *input);
+void reset_input(InputState *input);
 void update_game(Board *board, InputState *input);
+
+void switch_cells(Cell *c1, Cell *c2);
+
 
 #endif

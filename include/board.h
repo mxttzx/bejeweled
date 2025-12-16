@@ -1,5 +1,5 @@
-#ifndef M5_PROJECT_BOARD_H_
-#define M5_PROJECT_BOARD_H_
+#ifndef BOARD_H_
+#define BOARD_H_
 
 #include <cstdint>
 
@@ -24,7 +24,8 @@ typedef struct {
     uint8_t cols;
 } Board;
 
-uint8_t g_idx(Board *board, uint8_t x, uint8_t y);
+
 Board* init_board();
+void resupply(Board *board);
 
 #endif

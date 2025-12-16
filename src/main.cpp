@@ -1,7 +1,8 @@
 #include <M5Unified.h>
 #include <EEPROM.h>
-#include "game.h"
-#include "state.h"
+
+#include "../include/render.h"
+#include "../include/state.h"
 
 #define SCREEN_WIDTH 135
 #define SCREEN_HEIGHT 240
@@ -20,7 +21,7 @@ void setup() {
     Serial.flush();
     EEPROM.begin(512);
 
-    srand((unsigned) time(NULL));
+    srand((unsigned) time(0));
 
     board = init_board();
     input = init_input();
@@ -31,7 +32,7 @@ void loop() {
     M5.update();
 
     read_input(input);
-    render_game(board, input->cursor);
+    render_game(board, input);
     update_game(board, input);
 
     delay(200); // Give player enough time to react to movement
