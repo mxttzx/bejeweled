@@ -3,13 +3,12 @@
 
 #include "../include/render.h"
 #include "../include/state.h"
-
-#define SCREEN_WIDTH 135
-#define SCREEN_HEIGHT 240
-
+#include "../include/game.h"
 
 Board* board;
 InputState* input;
+GameState* gs;
+
 
 // The setup routine runs once when M5StickC starts up
 void setup() {
@@ -21,19 +20,19 @@ void setup() {
     Serial.flush();
     EEPROM.begin(512);
 
-    srand((unsigned) time(0));
+    srand((unsigned) time(NULL));
 
-    board = init_board();
+    board = init_board(9, 9);
     input = init_input();
+    gs = init_game();
 }
-
 // The loop routine keeps looping as long as the controller is on
 void loop() {
     M5.update();
 
     read_input(input);
-    render_game(board, input);
-    update_game(board, input);
+    update_game(gs, board, input);
+    render_game(gs, board, input);
 
-    delay(200); // Give player enough time to react to movement
+    delay(250);
 }

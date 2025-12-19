@@ -1,7 +1,7 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <cstdint>
+#include "M5Unified.h"
 
 #define CELL_WIDTH 15
 #define CELL_HEIGHT 15
@@ -25,7 +25,8 @@ typedef struct {
 } Board;
 
 
-Board* init_board();
+Board* init_board(uint8_t rows, uint8_t cols);
 void resupply(Board *board);
+uint8_t get_idx(Board *board, uint8_t x, uint8_t y);
 
 #endif

@@ -1,8 +1,8 @@
 #include "../include/state.h"
+#include "../include/game.h"
 
 #include "cursor.h"
-#include "M5Unified.h"
-#include "util.h"
+#include "render.h"
 
 InputState* init_input() {
     InputState *input = (InputState *)malloc(sizeof(InputState));
@@ -28,12 +28,15 @@ InputState* init_input() {
     // c1: [0, 0], c2: [1, 0]
     input->cursor[1].x = 1;
 
+    input->btn_a = false;
+    input->btn_b = false;
+    input->btn_c = false;
+
     return input;
 }
 
 
 void swap(Cell *c1, Cell *c2) {
-    if (c1->color == c2->color) return; // Switching cells of the same color
     if (!c1->init || !c2->init) return; // Switching dead cells
 
     uint32_t temp = c1->color;
@@ -44,6 +47,7 @@ void swap(Cell *c1, Cell *c2) {
 void reset_input(InputState *input) {
     input->btn_a = false;
     input->btn_b = false;
+    input->btn_c = false;
 
     input->ax = 0;
     input->ay = 0;
@@ -58,12 +62,12 @@ void disable_cell(Cell *cell) {
 bool row_inline(Board *board, uint8_t row) {
     uint32_t prev = 0;
     uint8_t start = 0;
-    bool rm = false;
+    uint8_t collect = 0;
 
-    for (uint8_t x = 0; x <= BOARD_COLS; x++) {
+    for (uint8_t x = 0; x <= board->cols; x++) {
         uint32_t next = 0;
 
-        if (x < BOARD_COLS) {
+        if (x < board->cols) {
             Cell *c = &board->grid[get_idx(board, x, row)];
             next = c->init ? c->color : 0;
         }
@@ -80,25 +84,25 @@ bool row_inline(Board *board, uint8_t row) {
                 for (uint8_t k = start; k < x; k++) {
                     disable_cell(&board->grid[get_idx(board, k, row)]);
                 }
-                rm = true;
+                collect += run;
             }
 
             prev = next;
             start = x;
         }
     }
-    return rm;
+    return collect;
 }
 
 bool col_inline(Board *board, uint8_t col) {
     uint32_t prev = 0;
     uint8_t start = 0;
-    bool rm = false;
+    uint8_t collect = 0;
 
-    for (uint8_t y = 0; y <= BOARD_ROWS; y++) {
+    for (uint8_t y = 0; y <= board->rows; y++) {
         uint32_t next = 0;
 
-        if (y < BOARD_ROWS) {
+        if (y < board->rows) {
             Cell *c = &board->grid[get_idx(board, col, y)];
             next = c->init ? c->color : 0;
         }
@@ -115,21 +119,21 @@ bool col_inline(Board *board, uint8_t col) {
                 for (uint8_t k = start; k < y; k++) {
                     disable_cell(&board->grid[get_idx(board, col, k)]);
                 }
-                rm = true;
+                collect += run;
             }
 
             prev = next;
             start = y;
         }
     }
-    return rm;
+    return collect;
 }
 
 void cascade(Board *board) {
-    for (uint8_t x = 0; x < BOARD_COLS; x++) {
-        int row = BOARD_ROWS - 1;
+    for (uint8_t x = 0; x < board->cols; x++) {
+        int row = board->rows - 1;
 
-        for (int y = BOARD_ROWS - 1; y >= 0; y--) {
+        for (int y = board->rows - 1; y >= 0; y--) {
             Cell *c1 = &board->grid[get_idx(board, x, y)];
             if (!c1->init) continue;
             if (y != row) {
@@ -148,44 +152,95 @@ void cascade(Board *board) {
     }
 }
 
-bool mark_inline(Board *board) {
-    bool rm = false;
+uint8_t mark_inline(Board *board) {
+    uint8_t removed = 0;
 
-    for (uint8_t x = 0; x < BOARD_COLS; x++) {
-        if (col_inline(board, x)) rm = true;
+    for (uint8_t x = 0; x < board->cols; x++) {
+        removed += col_inline(board, x);
     }
 
-    for (uint8_t y = 0; y < BOARD_ROWS; y++) {
-        if (row_inline(board, y)) rm = true;
+    for (uint8_t y = 0; y < board->rows; y++) {
+        removed += row_inline(board, y);
     }
 
-    return rm;
+    return removed;
 }
 
-void stabilize(Board *board) {
-    while (mark_inline(board)) {
+void stabilize(GameState *gs, Board *board) {
+    uint8_t removed;
+
+    while ((removed = mark_inline(board)) > 0) {
+        update_score(gs, removed);
         cascade(board);
         resupply(board);
     }
 }
 
-void update_game(Board *board, InputState *input) {
-    if (input->btn_a) rotate_cursor(input);
-    if (input->btn_b) {
-        Cell *c1 = &board->grid[get_idx(board, input->cursor[0].x, input->cursor[0].y)];
-        Cell *c2 = &board->grid[get_idx(board, input->cursor[1].x, input->cursor[1].y)];
+void toggle_menu(GameState *gs) {
+    if (gs->view_mode == MENU) {
+        gs->view_mode = GAME;
+        gs->actv_item = -1;
+    } else {
+        gs->view_mode = MENU;
+        gs->actv_item = 0;
+    }
+    M5.Lcd.clear();
+}
 
-        swap(c1, c2);
-        stabilize(board);
+void move_up(GameState *gs) {
+    gs->actv_item = ++gs->actv_item % MENU_ITM_SIZE;
+    M5.Lcd.clear();
+}
+
+void move_down(GameState *gs) {
+    gs->actv_item = --gs->actv_item % MENU_ITM_SIZE;
+    M5.Lcd.clear();
+}
+
+void update_game(GameState *gs, Board *board, InputState *input) {
+    if (input->btn_c) toggle_menu(gs);
+
+    switch (gs->view_mode) {
+        case GAME:
+            if (input->btn_a) rotate_cursor(input);
+            if (input->btn_b) {
+                if (gs->moves == 0) return;
+
+                Cell *c1 = &board->grid[get_idx(board, input->cursor[0].x, input->cursor[0].y)];
+                Cell *c2 = &board->grid[get_idx(board, input->cursor[1].x, input->cursor[1].y)];
+
+                swap(c1, c2);
+                stabilize(gs, board);
+
+                gs->moves--;
+            }
+            move_cursor(input);
+            break;
+
+        case MENU:
+            if (input->btn_a) move_up(gs);
+            if (input->btn_b) move_down(gs);
+
+            if (input->btn_c) {
+                switch (gs->actv_item) {
+                    case 0:
+                        board = init_board(9, 9);
+                        input = init_input();
+                        gs = init_game();
+                }
+            }
+
+            break;
+
     }
 
-    move_cursor(input);
     reset_input(input);
 }
 
 void read_input(InputState *input) {
     if (M5.BtnA.wasPressed()) input->btn_a = true;
     if (M5.BtnB.wasPressed()) input->btn_b = true;
+    if (M5.BtnA.wasPressed() && M5.BtnB.wasPressed()) input->btn_c = true;
 
     M5.Imu.getAccelData(&input->ax, &input->ay, &input->az);
 }
