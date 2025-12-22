@@ -11,6 +11,9 @@
 
 #define CURSOR_SIZE 2
 
+#define INIT_ROWS 8
+#define INIT_COLS 8
+
 typedef struct {
     uint32_t color;
     uint8_t x, y; // Should be a value in [0, cols] and [0, rows]
@@ -26,6 +29,7 @@ typedef struct {
 
 
 Board* init_board(uint8_t rows, uint8_t cols);
+void reset_board(Board *board);
 void resupply(Board *board);
 uint8_t get_idx(Board *board, uint8_t x, uint8_t y);
 

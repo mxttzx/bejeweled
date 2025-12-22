@@ -4,33 +4,35 @@
 #include "cursor.h"
 #include "render.h"
 
-InputState* init_input() {
-    InputState *input = (InputState *)malloc(sizeof(InputState));
-    if (!input) {
-        fprintf(stderr, "Failed to allocate memory for input\n");
-        exit(EXIT_FAILURE);
-    }
+void reset_input_internal(InputState *input) {
+    input->btn_a = false;
+    input->btn_b = false;
+    input->btn_c = false;
 
-    input->cursor = (Cell *)calloc(CURSOR_SIZE, sizeof(Cell));
-    if (!input->cursor) {
-        fprintf(stderr, "Failed to allocate memory for cursor\n");
-        exit(EXIT_FAILURE);
-    }
+    input->ax = 0;
+    input->ay = 0;
+    input->az = 0;
+}
 
-    for (int i = 0; i < CURSOR_SIZE; i++) {
+void reset_input(InputState *input) {
+   for (int i = 0; i < CURSOR_SIZE; i++) {
         Cell *cell = &input->cursor[i];
 
         cell->w = CELL_WIDTH;
         cell->h = CELL_HEIGHT;
-        cell->color = 0;
+        cell->color = 0xFFFFFF;
     }
 
     // c1: [0, 0], c2: [1, 0]
     input->cursor[1].x = 1;
 
-    input->btn_a = false;
-    input->btn_b = false;
-    input->btn_c = false;
+    reset_input_internal(input);
+}
+
+InputState* init_input() {
+    InputState *input = (InputState *)malloc(sizeof(InputState));
+    input->cursor = (Cell *)calloc(CURSOR_SIZE, sizeof(Cell));
+    reset_input(input);
 
     return input;
 }
@@ -42,16 +44,6 @@ void swap(Cell *c1, Cell *c2) {
     uint32_t temp = c1->color;
     c1->color = c2->color;
     c2->color = temp;
-}
-
-void reset_input(InputState *input) {
-    input->btn_a = false;
-    input->btn_b = false;
-    input->btn_c = false;
-
-    input->ax = 0;
-    input->ay = 0;
-    input->az = 0;
 }
 
 void disable_cell(Cell *cell) {
@@ -187,60 +179,67 @@ void toggle_menu(GameState *gs) {
     M5.Lcd.clear();
 }
 
-void move_up(GameState *gs) {
-    gs->actv_item = ++gs->actv_item % MENU_ITM_SIZE;
-    M5.Lcd.clear();
-}
-
-void move_down(GameState *gs) {
+void up_menu_item(GameState *gs) {
     gs->actv_item = --gs->actv_item % MENU_ITM_SIZE;
     M5.Lcd.clear();
 }
 
-void update_game(GameState *gs, Board *board, InputState *input) {
-    if (input->btn_c) toggle_menu(gs);
+void select_menu_item(GameState *gs, Board *board, InputState *input) {
+    switch (gs->actv_item) {
+        case 0:
+            toggle_menu(gs);
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            reset_board(board); 
+            reset_input(input);
+            reset_game(gs);
 
+            toggle_menu(gs);
+            break;
+    }
+}
+
+void handle_game_view(GameState *gs, Board *board, InputState *input) {
+    if (input->btn_c) toggle_menu(gs);
+    if (input->btn_a) rotate_cursor(board, input);
+    if (input->btn_b && gs->moves > 0) {
+        Cell *c1 = &board->grid[get_idx(board, input->cursor[0].x, input->cursor[0].y)];
+        Cell *c2 = &board->grid[get_idx(board, input->cursor[1].x, input->cursor[1].y)];
+
+        swap(c1, c2);
+        stabilize(gs, board);
+
+        gs->moves--;
+    }
+    move_cursor(board, input);
+}
+
+void handle_menu_view(GameState *gs, Board *board, InputState *input) {
+    if (input->btn_a) up_menu_item(gs);
+    if (input->btn_b) select_menu_item(gs, board, input);
+}
+
+void update_game(GameState *gs, Board *board, InputState *input) {
     switch (gs->view_mode) {
         case GAME:
-            if (input->btn_a) rotate_cursor(input);
-            if (input->btn_b) {
-                if (gs->moves == 0) return;
-
-                Cell *c1 = &board->grid[get_idx(board, input->cursor[0].x, input->cursor[0].y)];
-                Cell *c2 = &board->grid[get_idx(board, input->cursor[1].x, input->cursor[1].y)];
-
-                swap(c1, c2);
-                stabilize(gs, board);
-
-                gs->moves--;
-            }
-            move_cursor(input);
+            handle_game_view(gs, board, input);
             break;
-
         case MENU:
-            if (input->btn_a) move_up(gs);
-            if (input->btn_b) move_down(gs);
-
-            if (input->btn_c) {
-                switch (gs->actv_item) {
-                    case 0:
-                        board = init_board(9, 9);
-                        input = init_input();
-                        gs = init_game();
-                }
-            }
-
+            handle_menu_view(gs, board, input);
             break;
-
     }
-
-    reset_input(input);
+    reset_input_internal(input);
 }
 
 void read_input(InputState *input) {
     if (M5.BtnA.wasPressed()) input->btn_a = true;
     if (M5.BtnB.wasPressed()) input->btn_b = true;
-    if (M5.BtnA.wasPressed() && M5.BtnB.wasPressed()) input->btn_c = true;
+
+    if (input->btn_a && input->btn_b) input->btn_c = true;
 
     M5.Imu.getAccelData(&input->ax, &input->ay, &input->az);
 }

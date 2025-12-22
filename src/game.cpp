@@ -19,17 +19,19 @@ void set_level(uint8_t level) {
     EEPROM.write(ADDR_LEVEL, level);
 }
 
-
-GameState* init_game() {
-    GameState *gs = (GameState*)malloc(sizeof(GameState));
-
-    gs->score = get_score();
-    gs->level = get_level();
+void reset_game(GameState *gs) {
+    gs->score = 0;
+    gs->level = 0;
     gs->moves = INIT_MOVES;
     gs->points = INIT_POINTS;
     gs->view_mode = GAME;
     gs->actv_item = -1; // The index of the menu_items array, -1 for when in GAME mode
+}
 
+GameState* init_game() {
+    GameState *gs = (GameState*)malloc(sizeof(GameState));
+    reset_game(gs); 
+ 
     return gs;
 }
 

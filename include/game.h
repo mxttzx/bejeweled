@@ -34,6 +34,7 @@ typedef struct {
 } GameState;
 
 GameState* init_game();
+void reset_game(GameState *gs);
 
 uint32_t get_score();
 uint8_t get_level();

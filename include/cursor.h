@@ -5,7 +5,7 @@
 
 #define MIN_TILT 0.30
 
-void move_cursor(InputState *input);
-void rotate_cursor(InputState *input);
+void move_cursor(Board *board, InputState *input);
+void rotate_cursor(Board *board, InputState *input);
 
 #endif

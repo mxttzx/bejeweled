@@ -22,10 +22,11 @@ void setup() {
 
     srand((unsigned) time(NULL));
 
-    board = init_board(9, 9);
+    board = init_board(INIT_ROWS, INIT_COLS);
     input = init_input();
     gs = init_game();
 }
+
 // The loop routine keeps looping as long as the controller is on
 void loop() {
     M5.update();
@@ -34,5 +35,5 @@ void loop() {
     update_game(gs, board, input);
     render_game(gs, board, input);
 
-    delay(250);
+    delay(200);
 }

@@ -1,9 +1,14 @@
 #include "../include/render.h"
 
-const char *menu_items[] = { "New game", "Load", "Save", "Back" };
+const char *menu_items[] = { "BACK", "SAVE", "LOAD", "RESET LEVEL" };
 
 void outline(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t color) {
     M5.Lcd.drawRect(x * CELL_WIDTH, GRID_OFFSET + y * CELL_HEIGHT, w, h, color);
+}
+
+void cursor_fn(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t color) {
+    M5.Lcd.drawRect(x * CELL_WIDTH, GRID_OFFSET + y * CELL_HEIGHT, w, h, color);
+    M5.Lcd.drawRect(x * CELL_WIDTH + 1, GRID_OFFSET + y * CELL_HEIGHT + 1, w - 2, h - 2, color);
 }
 
 void fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint32_t color) {
@@ -39,8 +44,8 @@ void render_board(GameState *gs, Board *board, InputState *input) {
         render_cell(cell, fill);
     }
 
-    render_cell(&cursor[0], outline);
-    render_cell(&cursor[1], outline);
+    render_cell(&cursor[0], cursor_fn);
+    render_cell(&cursor[1], cursor_fn);
 
     render_state(gs);
 }

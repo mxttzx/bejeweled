@@ -1,7 +1,7 @@
 #include "../include/cursor.h"
 
 
-void move_cursor(InputState *input) {
+void move_cursor(Board *board, InputState *input) {
     Cell *cursor = input->cursor;
 
     float ax = input->ax;
@@ -25,10 +25,10 @@ void move_cursor(InputState *input) {
     uint8_t ny2 = cursor[1].y + dy;
 
     // Abort if cells move out of bounds
-    if ( nx1 >= BOARD_COLS ||
-         ny1 >= BOARD_ROWS ||
-         nx2 >= BOARD_COLS ||
-         ny2 >= BOARD_ROWS) return;
+    if (nx1 >= board->cols ||
+        ny1 >= board->rows ||
+        nx2 >= board->cols ||
+        ny2 >= board->rows) return;
 
     cursor[0].x += dx;
     cursor[0].y += dy;
@@ -36,7 +36,7 @@ void move_cursor(InputState *input) {
     cursor[1].y += dy;
 }
 
-void rotate_cursor(InputState *input) {
+void rotate_cursor(Board *board, InputState *input) {
     Cell *cursor = input->cursor;
 
     // Rotation based on goniometric circle path
@@ -58,7 +58,7 @@ void rotate_cursor(InputState *input) {
     uint8_t nx = (uint8_t)roundf((float)x1 + rx);
     uint8_t ny = (uint8_t)roundf((float)y1 + ry);
 
-    if (nx >= BOARD_COLS || ny >= BOARD_ROWS) return;
+    if (nx >= board->cols || ny >= board->rows) return;
 
     cursor[1].x = nx;
     cursor[1].y = ny;
