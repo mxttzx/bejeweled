@@ -58,7 +58,8 @@ void rotate_cursor(Board *board, InputState *input) {
     uint8_t nx = (uint8_t)roundf((float)x1 + rx);
     uint8_t ny = (uint8_t)roundf((float)y1 + ry);
 
-    if (nx >= board->cols || ny >= board->rows) return;
+    if (nx >= board->cols ||
+        ny >= board->rows) return;
 
     cursor[1].x = nx;
     cursor[1].y = ny;

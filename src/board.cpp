@@ -1,14 +1,21 @@
 #include "../include/board.h"
 
-uint32_t get_cell_color() {
-    const uint32_t colors[] = {
-        0xFF0000,
-        0x0000FF,
-        0x00FF00,
-        0xFF00FF,
-        0xFFFF00
+uint16_t get_cell_color(uint8_t amt) {
+    const uint16_t colors[] = {
+        RED,
+        GREEN,
+        BLUE,
+        MAGENTA,
+        CYAN,
+        YELLOW,
+        PURPLE
     };
-    return colors[rand() % 5];
+    return colors[rand() % amt];
+}
+
+uint8_t get_dims(uint8_t amt) {
+    uint8_t dims[] = {6, 7, 8, 9};
+    return dims[rand() % amt];
 }
 
 uint8_t get_idx(Board *board, uint8_t x, uint8_t y) {
@@ -21,10 +28,10 @@ void reset_board(Board *board) {
             // j -> columns (x)
             // i -> rows (y)
             Cell *cell = &board->grid[get_idx(board, j, i)]; 
-            uint32_t color;
+            uint16_t color;
 
             do {
-                color = get_cell_color();
+                color = get_cell_color(board->colors);
 
                 if (j >= 2) {
                     // check if two preceding x coordinates have the same color
@@ -58,11 +65,18 @@ void reset_board(Board *board) {
     }
 }
 
-Board* init_board(uint8_t rows, uint8_t cols) {
+Board *new_board(Board *board, uint8_t rows, uint8_t cols, uint8_t colors) {
+    free_board(board);
+    return init_board(rows, cols, colors);
+}
+
+Board* init_board(uint8_t rows, uint8_t cols, uint8_t colors) {
     Board *board = (Board*)malloc(sizeof(Board));
     board->rows = rows;
     board->cols = cols;
+    board->colors = colors;
     board->grid = (Cell *)calloc(board->rows * board->cols, sizeof(Cell));
+
     reset_board(board);
 
     return board;
@@ -74,7 +88,7 @@ void resupply(Board *board) {
             Cell *c = &board->grid[get_idx(board, x, y)];
             if (!c->init) {
                 c->init = true;
-                c->color = get_cell_color();
+                c->color = get_cell_color(board->colors);
             }
         }
     }

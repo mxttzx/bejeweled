@@ -5,7 +5,7 @@
 #include "EEPROM.h"
 
 #define POINT_PER_CELL 5
-#define MULTIPLIER 1.1
+#define MULTIPLIER 1.2
 
 #define INIT_POINTS 100
 #define INIT_MOVES 16
@@ -18,7 +18,7 @@ typedef enum {
 } GameMode;
 
 typedef enum {
-    MENU, GAME
+    MENU, GAME, STARTUP
 } ViewMode;
 
 typedef struct {
@@ -27,8 +27,8 @@ typedef struct {
     ViewMode view_mode;
     GameMode game_mode;
     uint8_t actv_item;
-    uint32_t points;
-    uint32_t score;
+    uint16_t points;
+    uint16_t score;
     uint8_t moves;
     uint8_t level;
 } GameState;
@@ -42,6 +42,6 @@ uint8_t get_level();
 void set_score(uint32_t score);
 void set_level(uint8_t level);
 
-void update_score(GameState *gs, uint8_t blocks);
+bool update_score(GameState *gs, uint8_t blocks);
 
 #endif

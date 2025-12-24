@@ -22,7 +22,7 @@ void setup() {
 
     srand((unsigned) time(NULL));
 
-    board = init_board(INIT_ROWS, INIT_COLS);
+    board = init_board(INIT_ROWS, INIT_COLS, INIT_COLORS);
     input = init_input();
     gs = init_game();
 }
