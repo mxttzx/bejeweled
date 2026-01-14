@@ -2,16 +2,12 @@
 #define GAME_H_
 
 #include "board.h"
-#include "EEPROM.h"
 
 #define POINT_PER_CELL 5
 #define MULTIPLIER 1.2
 
 #define INIT_POINTS 100
 #define INIT_MOVES 16
-
-#define ADDR_SCORE 1
-#define ADDR_LEVEL 2
 
 typedef enum {
    EASY, HARD
@@ -22,8 +18,8 @@ typedef enum {
 } ViewMode;
 
 typedef struct {
-    bool should_continue;
     bool game_over;
+    bool game_won;
     ViewMode view_mode;
     GameMode game_mode;
     uint8_t actv_item;
@@ -36,10 +32,10 @@ typedef struct {
 GameState* init_game();
 void reset_game(GameState *gs);
 
-uint32_t get_score();
+uint16_t get_score();
 uint8_t get_level();
 
-void set_score(uint32_t score);
+void set_score(uint16_t score);
 void set_level(uint8_t level);
 
 bool update_score(GameState *gs, uint8_t blocks);

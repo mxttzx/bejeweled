@@ -1,9 +1,5 @@
-#include <M5Unified.h>
-#include <EEPROM.h>
-
-#include "../include/render.h"
-#include "../include/state.h"
-#include "../include/game.h"
+#include "render.h"
+#include "game.h"
 
 Board* board;
 InputState* input;
@@ -31,9 +27,11 @@ void setup() {
 void loop() {
     M5.update();
 
-    read_input(input);
-    update_game(gs, board, input);
-    render_game(gs, board, input);
+    if (!gs->game_over) {
+        read_input(input);
+        update_game(gs, board, input);
+        render_game(gs, board, input);
+    }
 
-    delay(200);
+    delay(50);
 }

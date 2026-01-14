@@ -1,23 +1,4 @@
-#include "../include/game.h"
-
-#include "state.h"
-
-
-uint32_t get_score() {
-    return EEPROM.read(ADDR_SCORE);
-}
-
-uint8_t get_level() {
-    return EEPROM.read(ADDR_LEVEL);
-}
-
-void set_score(uint32_t score) {
-    EEPROM.write(ADDR_SCORE, score);
-}
-
-void set_level(uint8_t level) {
-    EEPROM.write(ADDR_LEVEL, level);
-}
+#include "game.h"
 
 void reset_game(GameState *gs) {
     if (!gs) return;
@@ -25,6 +6,7 @@ void reset_game(GameState *gs) {
     gs->level = 0;
     gs->moves = INIT_MOVES;
     gs->points = INIT_POINTS;
+    gs->game_won = false;
     gs->game_over = false;
     gs->view_mode = STARTUP;
     gs->game_mode = EASY;
@@ -33,7 +15,9 @@ void reset_game(GameState *gs) {
 
 GameState* init_game() {
     GameState *gs = (GameState*)malloc(sizeof(GameState));
-    reset_game(gs); 
+    if (gs == NULL) exit(EXIT_FAILURE);
+
+    reset_game(gs);
  
     return gs;
 }

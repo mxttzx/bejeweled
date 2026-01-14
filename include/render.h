@@ -2,9 +2,11 @@
 #define RENDER_H_
 
 #include "board.h"
-#include "state.h"
+#include "input.h"
 #include "game.h"
-#include <M5Unified.h>
+
+#define GAME_LOST "YOU LOST!"
+#define GAME_WON "YOU WON!"
 
 #define SCREEN_WIDTH 135
 #define SCREEN_HEIGHT 240
@@ -12,10 +14,7 @@
 #define MENU_ITM_SIZE 4
 #define MENU_ITM_HEIGHT 25
 
-#define MENU_ITM_ACTV 2
-#define MENU_ITM_INACTV 0
-
-#define MARGIN_X 25
+#define MARGIN_X 15
 #define MARGIN_Y 25
 #define OFFSET_Y 15
 

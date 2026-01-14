@@ -1,6 +1,7 @@
 #include "../include/board.h"
 
-uint16_t get_cell_color(uint8_t amt) {
+uint16_t get_color(uint8_t amt) {
+    // amt should never be larger than size of colors
     const uint16_t colors[] = {
         RED,
         GREEN,
@@ -14,6 +15,7 @@ uint16_t get_cell_color(uint8_t amt) {
 }
 
 uint8_t get_dims(uint8_t amt) {
+    // amt should never be larger than size of dims
     uint8_t dims[] = {6, 7, 8, 9};
     return dims[rand() % amt];
 }
@@ -31,7 +33,15 @@ void reset_board(Board *board) {
             uint16_t color;
 
             do {
-                color = get_cell_color(board->colors);
+                color = get_color(board->colors);
+
+                if (i >= 2) {
+                    // Pick another color if two preciding y coordinates have the same color
+                    Cell *c1 = &board->grid[get_idx(board, j, i - 1)];
+                    Cell *c2 = &board->grid[get_idx(board, j, i - 2)];
+                    if (c1->color == color && c2->color == color)
+                        continue;
+                }
 
                 if (j >= 2) {
                     // check if two preceding x coordinates have the same color
@@ -41,20 +51,11 @@ void reset_board(Board *board) {
                     if (c1->color == color && c2->color == color)
                         continue;
                 }
-
-                if (i >= 2) {
-                    // Same concept for y coordinates
-                    // Pick another if two preciding y coordinates have the same color 
-                    Cell *c1 = &board->grid[get_idx(board, j, i - 1)];
-                    Cell *c2 = &board->grid[get_idx(board, j, i - 2)];
-                    if (c1->color == color && c2->color == color)
-                        continue;
-                }
-
                 break;
 
             } while (true);
 
+            cell->scheduled = false;
             cell->init = true;
             cell->color = color;
             cell->x = j;
@@ -65,37 +66,47 @@ void reset_board(Board *board) {
     }
 }
 
-Board *new_board(Board *board, uint8_t rows, uint8_t cols, uint8_t colors) {
-    free_board(board);
-    return init_board(rows, cols, colors);
-}
-
-Board* init_board(uint8_t rows, uint8_t cols, uint8_t colors) {
-    Board *board = (Board*)malloc(sizeof(Board));
+// Create a new board grid from an existing board
+void new_board(Board *board, uint8_t rows, uint8_t cols, uint8_t colors) {
+    free(board->grid); // Free the grid memory
     board->rows = rows;
     board->cols = cols;
     board->colors = colors;
     board->grid = (Cell *)calloc(board->rows * board->cols, sizeof(Cell));
+
+    if (board->grid == NULL) exit(EXIT_FAILURE);
+
+    reset_board(board);
+}
+
+// Create the initial instance of a board with a grid
+Board* init_board(uint8_t rows, uint8_t cols, uint8_t colors) {
+    Board *board = (Board*)malloc(sizeof(Board));
+
+    if (board == NULL) exit(EXIT_FAILURE);
+
+    board->rows = rows;
+    board->cols = cols;
+    board->colors = colors;
+    board->grid = (Cell *)calloc(board->rows * board->cols, sizeof(Cell));
+
+    if (board->grid == NULL) exit(EXIT_FAILURE);
 
     reset_board(board);
 
     return board;
 }
 
+// Add new cells to the board
+// All cells that are gone are reinitialized and given a new color
 void resupply(Board *board) {
     for (uint8_t y = 0; y < board->rows; y++) {
         for (uint8_t x = 0; x < board->cols; x++) {
             Cell *c = &board->grid[get_idx(board, x, y)];
             if (!c->init) {
                 c->init = true;
-                c->color = get_cell_color(board->colors);
+                c->color = get_color(board->colors);
             }
         }
     }
 }
-
-void free_board(Board *board) {
-    free(board->grid);
-    free(board);
-}
-
